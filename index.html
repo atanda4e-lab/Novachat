@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>NovaChat - Connect and Chat</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- Navigation Bar -->
+
+    <header id="main-navbar">
+
+        <a href="#" class="logo" id="home-logo">NovaChat</a>
+
+        <nav>
+            <button type="button" class="login-btn">Login</button>
+            <button type="button" class="signup-btn">Sign Up</button>
+        </nav>
+
+    </header>
+
+
+    <!-- Homepage -->
+
+    <main id="landing-page" class="page active">
+
+        <section class="hero">
+
+            <div class="hero-content">
+
+                <p class="hero-label">WELCOME TO NOVACHAT</p>
+
+                <h1>Connect with people.<br>Chat without limits.</h1>
+
+                <p>
+                    A simple place to connect with friends, share messages,
+                    and build meaningful conversations.
+                </p>
+
+                <button type="button" class="start-btn">
+                    Get Started
+                </button>
+
+            </div>
+
+            <div class="hero-card">
+
+                <div class="mock-chat-header">
+                    <div class="mock-avatar">N</div>
+
+                    <div>
+                        <h3>NovaChat</h3>
+                        <p>Connecting people</p>
+                    </div>
+                </div>
+
+                <div class="mock-message received">
+                    Hey! Welcome to NovaChat.
+                </div>
+
+                <div class="mock-message sent">
+                    Thanks! Let's connect.
+                </div>
+
+                <div class="mock-message received">
+                    Great to have you here!
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- Features -->
+
+        <section class="features">
+
+            <h2>Everything you need to connect</h2>
+
+            <div class="feature-grid">
+
+                <div class="feature-card">
+                    <h3>Real-time Chat</h3>
+                    <p>Send and receive messages from your friends.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Find Friends</h3>
+                    <p>Discover other people using their usernames.</p>
+                </div>
+
+                <div class="feature-card">
+                    <h3>Your Profile</h3>
+                    <p>Personalize your account and profile information.</p>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- Registration Page -->
+
+    <section id="register-section" class="page auth-section">
+
+        <div class="auth-card">
+
+            <h1>Create your account</h1>
+
+            <p>Join the NovaChat community.</p>
+
+            <form id="register-form">
+
+                <label for="full-name">Full name</label>
+
+                <input
+                    type="text"
+                    id="full-name"
+                    placeholder="Enter your full name"
+                    required
+                >
+
+                <label for="username">Username</label>
+
+                <input
+                    type="text"
+                    id="username"
+                    placeholder="Choose a username"
+                    minlength="3"
+                    maxlength="20"
+                    required
+                >
+
+                <label for="register-method">Registration method</label>
+
+                <select id="register-method">
+                    <option value="email">Email</option>
+                    <option value="phone">Phone number</option>
+                </select>
+
+                <div id="email-field">
+
+                    <label for="register-email">Email address</label>
+
+                    <input
+                        type="email"
+                        id="register-email"
+                        placeholder="Enter your email"
+                        required
+                    >
+
+                </div>
+
+                <div id="phone-field">
+
+                    <label for="register-phone">Phone number</label>
+
+                    <input
+                        type="tel"
+                        id="register-phone"
+                        placeholder="Enter your phone number"
+                    >
+
+                </div>
+
+                <label for="profile-image">Profile picture</label>
+
+                <input
+                    type="file"
+                    id="profile-image"
+                    accept="image/*"
+                >
+
+                <img
+                    id="profile-preview"
+                    alt="Profile preview"
+                >
+
+                <label for="register-password">Password</label>
+
+                <input
+                    type="password"
+                    id="register-password"
+                    placeholder="Create a password"
+                    minlength="6"
+                    required
+                >
+
+                <label for="confirm-password">Confirm password</label>
+
+                <input
+                    type="password"
+                    id="confirm-password"
+                    placeholder="Confirm your password"
+                    minlength="6"
+                    required
+                >
+
+                <button type="submit" class="primary-btn">
+                    Create Account
+                </button>
+
+                <p id="register-message" aria-live="polite"></p>
+
+            </form>
+
+            <p class="auth-switch">
+                Already have an account?
+                <button type="button" class="login-btn">Login</button>
+            </p>
+
+            <button type="button" id="register-home-btn" class="text-btn">
+                Back to Home
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- Login Page -->
+
+    <section id="login-section" class="page auth-section">
+
+        <div class="auth-card">
+
+            <h1>Welcome back</h1>
+
+            <p>Log in to continue to NovaChat.</p>
+
+            <form id="login-form">
+
+                <label for="login-email">Email address</label>
+
+                <input
+                    type="email"
+                    id="login-email"
+                    placeholder="Enter your email"
+                    required
+                >
+
+                <label for="login-password">Password</label>
+
+                <input
+                    type="password"
+                    id="login-password"
+                    placeholder="Enter your password"
+                    required
+                >
+
+                <button type="submit" class="primary-btn">
+                    Login
+                </button>
+
+                <p id="login-message" aria-live="polite"></p>
+
+            </form>
+
+            <p class="auth-switch">
+                Don't have an account?
+                <button type="button" id="open-register-btn">Sign Up</button>
+            </p>
+
+            <button type="button" id="login-home-btn" class="text-btn">
+                Back to Home
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- Dashboard -->
+
+    <section id="dashboard" class="page dashboard">
+
+        <div class="dashboard-header">
+
+            <a href="#" class="logo">NovaChat</a>
+
+            <button type="button" id="logout-btn" class="danger-btn">
+                Logout
+            </button>
+
+        </div>
+
+        <div class="welcome-card">
+
+            <img
+                id="dashboard-photo"
+                src="https://placehold.co/100x100/222222/ffffff?text=User"
+                alt="Your profile picture"
+            >
+
+            <div>
+
+                <h1>Welcome, <span id="welcome-name">User</span>!</h1>
+
+                <p id="dashboard-username">@username</p>
+
+                <p id="dashboard-email"></p>
+
+            </div>
+
+        </div>
+
+
+        <!-- Dashboard Menu -->
+
+        <div class="dashboard-grid">
+
+            <button type="button" id="open-chat-btn" class="dashboard-card">
+                <span>💬</span>
+                <h3>Messages</h3>
+                <p>Chat with your friends.</p>
+            </button>
+
+            <button type="button" id="find-friends-btn" class="dashboard-card">
+                <span>🔎</span>
+                <h3>Find Friends</h3>
+                <p>Discover people on NovaChat.</p>
+            </button>
+
+            <button type="button" id="open-friends-btn" class="dashboard-card">
+                <span>👥</span>
+                <h3>My Friends</h3>
+                <p>Manage your friendships.</p>
+            </button>
+
+            <button type="button" id="profile-btn" class="dashboard-card">
+                <span>👤</span>
+                <h3>My Profile</h3>
+                <p>Edit your personal information.</p>
+            </button>
+
+            <button type="button" id="open-notifications-btn" class="dashboard-card">
+                <span>🔔</span>
+                <h3>Notifications</h3>
+                <p>View your recent notifications.</p>
+                <span id="notification-count">0</span>
+            </button>
+
+            <button type="button" id="settings-btn" class="dashboard-card">
+                <span>⚙️</span>
+                <h3>Settings</h3>
+                <p>Manage your account.</p>
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- Find Friends Page -->
+
+    <section id="find-friends-page" class="page find-friends-page">
+
+        <div class="page-header">
+
+            <div>
+                <h1>Find Friends</h1>
+                <p>Discover people and connect on NovaChat.</p>
+            </div>
+
+            <button type="button" id="back-dashboard-btn">
+                Back to Dashboard
+            </button>
+
+        </div>
+
+        <div class="friends-search">
+
+            <h2>Discover People</h2>
+
+            <p>Enter a username to find someone.</p>
+
+            <form id="friends-search-form">
+
+                <input
+                    type="text"
+                    id="friends-search-input"
+                    placeholder="Search username..."
+                    autocomplete="off"
+                    required
+                >
+
+                <button type="submit" id="friends-search-btn">
+                    Search
+                </button>
+
+            </form>
+
+            <p id="friends-search-message" aria-live="polite"></p>
+
+        </div>
+
+        <div class="friends-results">
+
+            <h2>Search Results</h2>
+
+            <div id="friends-list">
+
+                <div class="friends-empty">
+                    <h3>Find your people</h3>
+                    <p>Search for a username to discover NovaChat users.</p>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div id="friend-profile" class="friend-profile">
+
+            <button type="button" id="close-friend-profile">
+                Close Profile
+            </button>
+
+            <img
+                id="friend-profile-photo"
+                src="https://placehold.co/100x100/222222/ffffff?text=User"
+                alt="Friend profile picture"
+            >
+
+            <h2 id="friend-profile-name">User Name</h2>
+
+            <p id="friend-profile-username">@username</p>
+
+            <p id="friend-profile-bio">NovaChat community member.</p>
+
+            <button type="button" id="message-friend-btn">
+                Message User
+            </button>
+
+            <button type="button" id="send-friend-request-btn">
+                Add Friend
+            </button>
+
+        </div>
+
+    </section>
+
+
+    <!-- Chat Page -->
+
+    <section id="chat-page" class="page app-page">
+
+        <div class="page-header">
+
+            <h1>Messages</h1>
+
+            <button type="button" id="chat-back-btn">
+                Back to Dashboard
+            </button>
+
+        </div>
+
+        <div class="chat-container">
+
+            <div class="conversation-list">
+
+                <h2>Conversations</h2>
+
+                <div id="conversation-list">
+                    <p class="empty-message">Your conversations will appear here.</p>
+                </div>
+
+            </div>
+
+            <div class="chat-window">
+
+                <div class="chat-user-header">
+
+                    <img
+                        id="chat-user-photo"
+                        src="https://placehold.co/100x100/222222/ffffff?text=User"
+                        alt="Chat user"
+                    >
+
+                    <div>
+                        <h3 id="chat-user-name">Select a conversation</h3>
+                        <p id="chat-user-username"></p>
+                    </div>
+
+                </div>
+
+                <div id="messages-container">
+                    <p class="empty-message">Select a friend to start chatting.</p>
+                </div>
+
+                <form id="message-form">
+
+                    <input
+                        type="text"
+                        id="message-input"
+                        placeholder="Type your message..."
+                        maxlength="5000"
+                        autocomplete="off"
+                        required
+                    >
+
+                    <button type="submit" id="send-message-btn">
+                        Send
+                    </button>
+
+                </form>
+
+                <p id="chat-message-status" aria-live="polite"></p>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- My Friends Page -->
+
+    <section id="friends-page" class="page app-page">
+
+        <div class="page-header">
+
+            <h1>My Friends</h1>
+
+            <button type="button" id="friends-back-btn">
+                Back to Dashboard
+            </button>
+
+        </div>
+
+        <div class="friends-section">
+
+            <h2>Friend Requests</h2>
+
+            <div id="friend-requests-list">
+                <p class="empty-message">No friend requests yet.</p>
+            </div>
+
+            <h2>My Friends</h2>
+
+            <div id="my-friends-list">
+                <p class="empty-message">Your friends will appear here.</p>
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- Edit Profile Page -->
+
+    <section id="edit-profile-page" class="page app-page">
+
+        <div class="page-header">
+
+            <h1>Edit Profile</h1>
+
+            <button type="button" id="profile-back-btn">
+                Back to Dashboard
+            </button>
+
+        </div>
+
+        <div class="form-container">
+
+            <form id="edit-profile-form">
+
+                <label for="edit-full-name">Full name</label>
+
+                <input type="text" id="edit-full-name" required>
+
+                <label for="edit-username">Username</label>
+
+                <input
+                    type="text"
+                    id="edit-username"
+                    minlength="3"
+                    maxlength="20"
+                    required
+                >
+
+                <label for="edit-bio">About me</label>
+
+                <textarea
+                    id="edit-bio"
+                    maxlength="250"
+                    placeholder="Tell people something about yourself..."
+                ></textarea>
+
+                <label for="edit-profile-image">Profile picture</label>
+
+                <input
+                    type="file"
+                    id="edit-profile-image"
+                    accept="image/*"
+                >
+
+                <img
+                    id="edit-profile-preview"
+                    src="https://placehold.co/100x100/222222/ffffff?text=User"
+                    alt="Profile preview"
+                >
+
+                <button type="submit" id="save-profile-btn">
+                    Save Changes
+                </button>
+
+                <p id="profile-message" aria-live="polite"></p>
+
+            </form>
+
+        </div>
+
+    </section>
+
+
+    <!-- Notifications Page -->
+
+    <section id="notifications-page" class="page app-page">
+
+        <div class="page-header">
+
+            <h1>Notifications</h1>
+
+            <button type="button" id="notifications-back-btn">
+                Back to Dashboard
+            </button>
+
+        </div>
+
+        <button type="button" id="mark-all-read-btn">
+            Mark All as Read
+        </button>
+
+        <div id="notifications-list">
+
+            <p class="empty-message">
+                You do not have any notifications yet.
+            </p>
+
+        </div>
+
+    </section>
+
+
+    <!-- Settings Page -->
+
+    <section id="settings-page" class="page app-page">
+
+        <div class="page-header">
+
+            <h1>Settings</h1>
+
+            <button type="button" id="settings-back-btn">
+                Back to Dashboard
+            </button>
+
+        </div>
+
+        <div class="settings-container">
+
+            <div class="settings-card">
+
+                <h2>Account</h2>
+
+                <p>Manage your NovaChat account and profile.</p>
+
+                <button type="button" id="settings-profile-btn">
+                    Edit Profile
+                </button>
+
+            </div>
+
+            <div class="settings-card">
+
+                <h2>Notifications</h2>
+
+                <p>View your messages and friend request alerts.</p>
+
+                <button type="button" id="settings-notifications-btn">
+                    View Notifications
+                </button>
+
+            </div>
+
+            <div class="settings-card">
+
+                <h2>Privacy</h2>
+
+                <p>Your account email is kept private.</p>
+
+            </div>
+
+            <div class="settings-card">
+
+                <h2>Log Out</h2>
+
+                <p>Sign out of your NovaChat account.</p>
+
+                <button type="button" id="settings-logout-btn">
+                    Log Out
+                </button>
+
+            </div>
+
+        </div>
+
+    </section>
+
+
+    <!-- Footer -->
+
+    <footer id="main-footer">
+
+        <p>&copy; 2026 NovaChat. All rights reserved.</p>
+
+    </footer>
+
+
+    <!-- JavaScript -->
+
+    <script type="module" src="script.js"></script>
+
+</body>
+
+</html>

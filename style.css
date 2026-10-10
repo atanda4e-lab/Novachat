@@ -1,0 +1,1117 @@
+/* =========================
+   1. GENERAL SETTINGS
+========================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #10131a;
+    color: #ffffff;
+    line-height: 1.6;
+}
+
+button,
+input,
+textarea,
+select {
+    font-family: inherit;
+    font-size: 16px;
+}
+
+button {
+    cursor: pointer;
+    border: none;
+    transition: 0.3s;
+}
+
+button:hover {
+    opacity: 0.85;
+}
+
+input,
+textarea,
+select {
+    width: 100%;
+    padding: 14px;
+    background-color: #1b202b;
+    color: #ffffff;
+    border: 1px solid #303848;
+    border-radius: 8px;
+    outline: none;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+    border-color: #00c896;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #9ba6b7;
+}
+
+textarea {
+    resize: vertical;
+}
+
+img {
+    max-width: 100%;
+}
+
+a {
+    color: #00c896;
+    text-decoration: none;
+}
+
+h1,
+h2,
+h3 {
+    line-height: 1.3;
+    margin-bottom: 15px;
+}
+
+p {
+    margin-bottom: 12px;
+}
+
+.page {
+    display: none;
+    width: 100%;
+    min-height: 70vh;
+    padding: 30px 5%;
+}
+
+.page.active {
+    display: block;
+}
+
+/* =========================
+   2. NAVIGATION BAR
+========================= */
+
+#main-navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    padding: 18px 5%;
+    background-color: #1b202b;
+    border-bottom: 1px solid #303848;
+}
+
+.logo {
+    color: #00c896;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+#main-navbar button {
+    padding: 11px 20px;
+    margin-left: 8px;
+    border-radius: 7px;
+    background-color: #00c896;
+    color: #10131a;
+    font-weight: bold;
+}
+
+#main-navbar button:hover {
+    background-color: #ff4f9a;
+    color: #ffffff;
+}
+
+/* =========================
+   3. BUTTONS
+========================= */
+
+.primary-btn,
+.secondary-btn,
+.login-btn,
+#logout-btn,
+#save-profile-btn {
+    padding: 13px 22px;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+.primary-btn,
+.login-btn,
+#save-profile-btn {
+    background-color: #00c896;
+    color: #10131a;
+}
+
+.secondary-btn {
+    background-color: #ff4f9a;
+    color: #ffffff;
+}
+
+#logout-btn {
+    background-color: #ff4f9a;
+    color: #ffffff;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* =========================
+   4. LANDING PAGE
+========================= */
+
+#landing-page {
+    padding-top: 60px;
+    padding-bottom: 60px;
+}
+
+.hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 40px;
+    min-height: 420px;
+}
+
+.hero-content {
+    flex: 1;
+}
+
+.hero-content h1 {
+    font-size: clamp(35px, 5vw, 55px);
+    max-width: 650px;
+}
+
+.hero-content h1 span {
+    color: #00c896;
+}
+
+.hero-content p {
+    max-width: 550px;
+    color: #b5bdca;
+    font-size: 18px;
+    margin: 20px 0;
+}
+
+.hero-content button {
+    margin-top: 10px;
+}
+
+.hero-image,
+.hero-visual {
+    flex: 1;
+    min-width: 0;
+}
+
+.hero-image img,
+.hero-visual img {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: 18px;
+}
+
+/* Landing page chat demonstration */
+
+.mock-chat,
+.chat-demo {
+    background-color: #1b202b;
+    padding: 25px;
+    border: 1px solid #303848;
+    border-radius: 15px;
+    max-width: 450px;
+    margin: 20px auto;
+}
+
+.mock-message,
+.chat-demo p {
+    padding: 12px 15px;
+    background-color: #272e3b;
+    border-radius: 10px;
+    margin-bottom: 12px;
+}
+
+.mock-message.sent {
+    background-color: #006f55;
+    text-align: right;
+}
+
+.mock-message.received {
+    background-color: #303848;
+}
+
+/* Features */
+
+.features {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 22px;
+    margin-top: 60px;
+}
+
+.feature-card {
+    background-color: #1b202b;
+    padding: 25px;
+    border: 1px solid #303848;
+    border-radius: 12px;
+}
+
+.feature-card h3 {
+    color: #00c896;
+}
+
+/* =========================
+   5. REGISTER AND LOGIN
+========================= */
+
+#register-section,
+#login-section {
+    max-width: 550px;
+    margin: 35px auto;
+    padding: 30px;
+    background-color: #1b202b;
+    border: 1px solid #303848;
+    border-radius: 15px;
+}
+
+#register-section h2,
+#login-section h2 {
+    text-align: center;
+    color: #00c896;
+}
+
+#register-section form,
+#login-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+#register-section label,
+#login-section label {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+#register-section input,
+#register-section select,
+#login-section input {
+    min-height: 48px;
+}
+
+#register-section button,
+#login-section button {
+    margin-top: 8px;
+}
+
+#profile-preview,
+#edit-profile-preview {
+    display: block;
+    width: 100px;
+    height: 100px;
+    margin: 10px auto;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #303848;
+}
+
+#register-message,
+#login-message,
+#profile-message,
+#friends-search-message,
+#chat-message-status {
+    margin-top: 15px;
+    overflow-wrap: anywhere;
+}
+
+/* =========================
+   6. DASHBOARD
+========================= */
+
+#dashboard {
+    max-width: 1200px;
+    margin: auto;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+}
+
+.dashboard-profile {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#dashboard-photo {
+    width: 85px;
+    height: 85px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #303848;
+}
+
+#dashboard-username {
+    color: #00c896;
+}
+
+#dashboard-email {
+    color: #9ba6b7;
+    overflow-wrap: anywhere;
+}
+
+.dashboard-menu {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 30px;
+}
+
+.dashboard-menu button,
+.dashboard-card button {
+    width: 100%;
+    padding: 25px 15px;
+    background-color: #1b202b;
+    color: #ffffff;
+    border: 1px solid #303848;
+    border-radius: 12px;
+    font-size: 17px;
+}
+
+.dashboard-menu button:hover,
+.dashboard-card button:hover {
+    border-color: #00c896;
+    color: #00c896;
+}
+
+#notification-count {
+    display: inline-block;
+    min-width: 22px;
+    padding: 2px 6px;
+    background-color: #ff4f9a;
+    color: #ffffff;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+/* =========================
+   7. FIND FRIENDS PAGE
+========================= */
+
+#find-friends-page {
+    max-width: 1200px;
+    margin: auto;
+}
+
+#back-dashboard-btn {
+    margin-bottom: 25px;
+}
+
+#friends-search-form {
+    display: flex;
+    align-items: stretch;
+    gap: 15px;
+    width: 100%;
+    max-width: 1100px;
+    margin: 30px 0;
+}
+
+/* Large search input */
+
+#find-friends-page #friends-search-form #friends-search-input {
+    display: block;
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    height: 72px;
+    padding: 20px 25px;
+    font-size: 20px;
+    line-height: 1.5;
+    color: #ffffff;
+    background-color: #1b202b;
+    border: 2px solid #303848;
+    border-radius: 12px;
+    box-sizing: border-box;
+}
+
+#friends-search-input::placeholder {
+    color: #9ba6b7;
+    font-size: 18px;
+}
+
+#friends-search-input:focus {
+    border-color: #00c896;
+    outline: none;
+    box-shadow: 0 0 10px rgba(0, 200, 150, 0.2);
+}
+
+#friends-search-form button {
+    flex-shrink: 0;
+    min-width: 160px;
+    min-height: 72px;
+    padding: 15px 25px;
+    background-color: #00c896;
+    color: #10131a;
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 12px;
+}
+
+/* Friend search results */
+
+#friends-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+    margin-top: 25px;
+}
+
+.friend-card,
+.friend-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 20px;
+    background-color: #1b202b;
+    border: 1px solid #303848;
+    border-radius: 12px;
+    overflow-wrap: anywhere;
+}
+
+.friend-card img,
+.friend-item img {
+    width: 65px;
+    height: 65px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.friend-card button,
+.friend-item button {
+    padding: 10px 15px;
+    margin-top: 8px;
+    background-color: #00c896;
+    color: #10131a;
+    border-radius: 7px;
+}
+
+/* =========================
+   8. FRIEND PROFILE POPUP
+========================= */
+
+#friend-profile {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    top: 50%;
+    left: 50%;
+    width: 90%;
+    max-width: 450px;
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 30px;
+    background-color: #1b202b;
+    border: 1px solid #303848;
+    border-radius: 15px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    transform: translate(-50%, -50%);
+}
+
+#friend-profile.active,
+#friend-profile.show {
+    display: block;
+}
+
+#close-friend-profile {
+    float: right;
+    padding: 8px 12px;
+    background-color: #ff4f9a;
+    color: #ffffff;
+    border-radius: 6px;
+}
+
+#friend-profile-photo {
+    display: block;
+    width: 110px;
+    height: 110px;
+    margin: 20px auto;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+#friend-profile-name,
+#friend-profile-username {
+    text-align: center;
+}
+
+#friend-profile-username {
+    color: #00c896;
+}
+
+#friend-profile button {
+    margin: 8px 5px 0 0;
+}
+
+/* =========================
+   9. CHAT PAGE
+========================= */
+
+#chat-page {
+    max-width: 1200px;
+    margin: auto;
+}
+
+#chat-back-btn {
+    margin-bottom: 20px;
+}
+
+.chat-layout {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+    gap: 20px;
+    min-height: 500px;
+}
+
+#conversation-list {
+    padding: 15px;
+    background-color: #1b202b;
+    border: 1px solid #303848;
+    border-radius: 12px;
+    overflow-y: auto;
+}
+
+.conversation-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 15px;
+    margin-bottom: 10px;
+    background-color: #252b38;
+    border-radius: 9px;
+    cursor: pointer;
+    overflow-wrap: anywhere;
+}
+
+.conversation-item:hover {
+    background-color: #303848;
+}
+
+.conversation-item img {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.chat-window {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 500px;
+    background-color: #1b202b;
+    border: 1px solid #303848;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.chat-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 18px;
+    background-color: #252b38;
+    border-bottom: 1px solid #303848;
+}
+
+#chat-user-photo {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+#chat-user-name {
+    margin-bottom: 2px;
+}
+
+#chat-user-username {
+    color: #9ba6b7;
+}
+
+#messages-container {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 300px;
+    max-height: 500px;
+    padding: 20px;
+    overflow-y: auto;
+    gap: 12px;
+}
+
+.message {
+    max-width: 75%;
+    width: fit-content;
+    padding: 12px 16px;
+    border-radius: 12px;
+    overflow-wrap: anywhere;
+}
+
+.message.sent {
+    align-self: flex-end;
+    background-color: #006f55;
+}
+
+.message.received {
+    align-self: flex-start;
+    background-color: #303848;
+}
+
+.message-time {
+    display: block;
+    margin-top: 5px;
+    color: #c0c8d5;
+    font-size: 11px;
+}
+
+#message-form {
+    display: flex;
+    gap: 10px;
+    padding: 15px;
+    background-color: #252b38;
+    border-top: 1px solid #303848;
+}
+
+#message-input {
+    flex: 1;
+    min-width: 0;
+    min-height: 48px;
+    border-radius: 25px;
+    padding: 12px 18px;
+}
+
+#send-message-btn {
+    flex-shrink: 0;
+    padding: 12px 22px;
+    background-color: #00c896;
+    color: #10131a;
+    border-radius: 25px;
+}
+
+/* =========================
+   10. FRIENDS PAGE
+========================= */
+
+#friends-page {
+    max-width: 1200px;
+    margin: auto;
+}
+
+#friends-back-btn {
+    margin-bottom: 25px;
+}
+
+#friend-requests-list,
+#my-friends-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+    margin: 20px 0 35px;
+}
+
+#friend-requests-list > div,
+#my-friends-list > div {
+    padding: 20px;
+    background-color: #1b202b;
+    border: 1px solid #303848;
+    border-radius: 12px;
+    overflow-wrap: anywhere;
+}
+
+#friend-requests-list button,
+#my-friends-list button {
+    padding: 10px 15px;
+    margin: 8px 5px 0 0;
+    border-radius: 7px;
+    background-color: #00c896;
+    color: #10131a;
+}
+
+#friend-requests-list button:last-child {
+    background-color: #ff4f9a;
+    color: #ffffff;
+}
+
+/* =========================
+   11. EDIT PROFILE PAGE
+========================= */
+
+#edit-profile-page {
+    max-width: 750px;
+    margin: auto;
+}
+
+#profile-back-btn {
+    margin-bottom: 25px;
+}
+
+#edit-profile-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding: 30px;
+    background-color: #1b202b;
+    border: 1px solid #303848;
+    border-radius: 15px;
+}
+
+#edit-profile-form label {
+    font-weight: bold;
+}
+
+#edit-profile-form input,
+#edit-profile-form textarea {
+    min-height: 48px;
+}
+
+#edit-profile-form textarea {
+    min-height: 120px;
+}
+
+#edit-profile-image {
+    padding: 10px;
+}
+
+/* =========================
+   12. NOTIFICATIONS PAGE
+========================= */
+
+#notifications-page {
+    max-width: 1000px;
+    margin: auto;
+}
+
+#notifications-back-btn,
+#mark-all-read-btn {
+    margin-bottom: 20px;
+    margin-right: 10px;
+}
+
+#mark-all-read-btn {
+    padding: 12px 18px;
+    background-color: #00c896;
+    color: #10131a;
+    border-radius: 8px;
+}
+
+#notifications-list {
+    margin-top: 20px;
+}
+
+.notification-item {
+    padding: 18px;
+    margin-bottom: 12px;
+    background-color: #1b202b;
+    border: 1px solid #303848;
+    border-radius: 10px;
+    overflow-wrap: anywhere;
+}
+
+.notification-item.unread {
+    border-left: 4px solid #00c896;
+}
+
+.notification-item.read {
+    opacity: 0.7;
+}
+
+/* =========================
+   13. SETTINGS PAGE
+========================= */
+
+#settings-page {
+    max-width: 800px;
+    margin: auto;
+}
+
+#settings-back-btn {
+    margin-bottom: 25px;
+}
+
+#settings-page > button:not(#settings-back-btn) {
+    display: block;
+    width: 100%;
+    padding: 20px;
+    margin-bottom: 15px;
+    text-align: left;
+    background-color: #1b202b;
+    color: #ffffff;
+    border: 1px solid #303848;
+    border-radius: 10px;
+}
+
+#settings-page > button:hover {
+    border-color: #00c896;
+    color: #00c896;
+}
+
+/* =========================
+   14. FOOTER
+========================= */
+
+#main-footer {
+    padding: 25px 5%;
+    margin-top: 40px;
+    text-align: center;
+    background-color: #1b202b;
+    border-top: 1px solid #303848;
+    color: #9ba6b7;
+}
+
+#main-footer p {
+    margin-bottom: 0;
+}
+
+/* =========================
+   15. RESPONSIVE DESIGN
+========================= */
+
+@media (max-width: 900px) {
+    .hero {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .hero-image,
+    .hero-visual {
+        width: 100%;
+    }
+
+    .features {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-menu {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .chat-layout {
+        grid-template-columns: 1fr;
+    }
+
+    #conversation-list {
+        max-height: 250px;
+    }
+}
+
+@media (max-width: 600px) {
+    #main-navbar {
+        flex-wrap: wrap;
+        padding: 15px 4%;
+    }
+
+    .logo {
+        font-size: 24px;
+    }
+
+    #main-navbar button {
+        padding: 9px 12px;
+        margin-left: 4px;
+    }
+
+    .page {
+        padding: 25px 4%;
+    }
+
+    #landing-page {
+        padding-top: 35px;
+    }
+
+    .hero-content h1 {
+        font-size: 34px;
+    }
+
+    .hero-content p {
+        font-size: 16px;
+    }
+
+    .features {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-menu {
+        grid-template-columns: 1fr;
+    }
+
+    #register-section,
+    #login-section {
+        padding: 22px;
+    }
+
+    .dashboard-header {
+        align-items: flex-start;
+    }
+
+    #friends-search-form {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    #find-friends-page #friends-search-form #friends-search-input {
+        width: 100%;
+        height: 65px;
+        min-height: 65px;
+        padding: 18px;
+        font-size: 18px;
+    }
+
+    #friends-search-input::placeholder {
+        font-size: 16px;
+    }
+
+    #friends-search-form button {
+        width: 100%;
+        min-height: 58px;
+        height: 58px;
+    }
+
+    #friends-list,
+    #friend-requests-list,
+    #my-friends-list {
+        grid-template-columns: 1fr;
+    }
+
+    .friend-card,
+    .friend-item {
+        flex-wrap: wrap;
+    }
+
+    #friend-profile {
+        padding: 20px;
+    }
+
+    #messages-container {
+        min-height: 250px;
+        padding: 12px;
+    }
+
+    .message {
+        max-width: 90%;
+    }
+
+    #message-form {
+        gap: 7px;
+        padding: 10px;
+    }
+
+    #message-input {
+        padding: 10px 12px;
+        font-size: 15px;
+    }
+
+    #send-message-btn {
+        padding: 10px 14px;
+    }
+
+    #edit-profile-form {
+        padding: 20px;
+    }
+}
+/* Fix white backgrounds across NovaChat */
+
+#dashboard,
+#find-friends-page,
+#friends-page,
+#chat-page,
+#edit-profile-page,
+#notifications-page,
+#settings-page {
+    background-color: #10131a;
+    color: #ffffff;
+}
+
+#dashboard button,
+#find-friends-page button,
+#friends-page button,
+#chat-page button,
+#edit-profile-page button,
+#notifications-page button,
+#settings-page button {
+    background-color: #00c896;
+    color: #10131a;
+    border: none;
+    border-radius: 8px;
+}
+
+/* Keep logout and reject buttons pink */
+
+#logout-btn,
+#settings-logout-btn,
+#close-friend-profile {
+    background-color: #ff4f9a !important;
+    color: #ffffff !important;
+}
+
+/* Fix dashboard cards */
+
+.dashboard-menu button,
+.dashboard-card button {
+    background-color: #1b202b;
+    color: #ffffff;
+    border: 1px solid #303848;
+}
+
+/* Fix input fields */
+
+input,
+textarea,
+select {
+    background-color: #1b202b;
+    color: #ffffff;
+    border: 1px solid #303848;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: #9ba6b7;
+}
+
+/* Fix white friend and notification cards */
+
+#friends-list > div,
+#friend-requests-list > div,
+#my-friends-list > div,
+#notifications-list > div,
+#conversation-list > div {
+    background-color: #1b202b;
+    color: #ffffff;
+    border: 1px solid #303848;
+}
+
+/* Keep text readable */
+
+#dashboard h1,
+#dashboard h2,
+#dashboard h3,
+#find-friends-page h1,
+#find-friends-page h2,
+#friends-page h1,
+#friends-page h2,
+#chat-page h1,
+#chat-page h2,
+#notifications-page h1,
+#notifications-page h2,
+#settings-page h1,
+#settings-page h2 {
+    color: #ffffff;
+}
