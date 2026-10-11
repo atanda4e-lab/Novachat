@@ -31,9 +31,9 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-storage.js";
 
 
-/* =====================================
+/* ==========================================
    1. GLOBAL VARIABLES
-===================================== */
+========================================== */
 
 let currentUser = null;
 let currentProfile = null;
@@ -41,20 +41,21 @@ let currentProfile = null;
 let activeConversationId = null;
 let activeChatUser = null;
 
+let selectedFriendProfile = null;
+
 let unsubscribeMessages = null;
 let unsubscribeConversations = null;
 let unsubscribeNotifications = null;
 
-let selectedFriendProfile = null;
 
-
-/* =====================================
-   2. HELPER FUNCTIONS
-===================================== */
+/* ==========================================
+   2. GENERAL HELPER FUNCTIONS
+========================================== */
 
 function getElement(id) {
     return document.getElementById(id);
 }
+
 
 function showMessage(id, message, success = false) {
     const element = getElement(id);
@@ -62,23 +63,28 @@ function showMessage(id, message, success = false) {
     if (!element) return;
 
     element.textContent = message;
+
     element.style.color = success ? "green" : "red";
 }
 
+
 function normaliseUsername(username) {
-    return username
+    return String(username || "")
         .trim()
         .toLowerCase()
         .replace(/^@/, "");
 }
 
+
 function getDefaultPhoto() {
     return "https://placehold.co/100x100/222222/ffffff?text=User";
 }
 
+
 function getPhoto(profile) {
     return profile?.photoURL || getDefaultPhoto();
 }
+
 
 function formatDate(timestamp) {
     if (!timestamp) return "";
@@ -87,17 +93,20 @@ function formatDate(timestamp) {
         ? timestamp.toDate()
         : new Date(timestamp);
 
-    if (Number.isNaN(date.getTime())) return "";
+    if (Number.isNaN(date.getTime())) {
+        return "";
+    }
 
     return date.toLocaleString();
 }
 
+
 function getErrorMessage(error) {
-    console.error(error);
+    console.error("NovaChat error:", error);
 
     const messages = {
         "auth/email-already-in-use":
-            "This email is already registered.",
+            "This email address is already registered.",
 
         "auth/invalid-email":
             "Please enter a valid email address.",
@@ -117,6 +126,9 @@ function getErrorMessage(error) {
         "auth/network-request-failed":
             "Network error. Check your internet connection.",
 
+        "auth/too-many-requests":
+            "Too many attempts. Please try again later.",
+
         "permission-denied":
             "Firebase denied this action. Check your Firestore rules.",
 
@@ -130,15 +142,26 @@ function getErrorMessage(error) {
 }
 
 
-/* =====================================
+function setButtonLoading(button, loading, loadingText, normalText) {
+    if (!button) return;
+
+    button.disabled = loading;
+
+    button.textContent = loading
+        ? loadingText
+        : normalText;
+}
+
+
+/* ==========================================
    3. PAGE NAVIGATION
-===================================== */
+========================================== */
 
 function showPage(pageId) {
     const target = getElement(pageId);
 
     if (!target) {
-        console.error("Page not found:", pageId);
+        console.error("Page not found in HTML:", pageId);
         return;
     }
 
@@ -153,14 +176,14 @@ function showPage(pageId) {
     const navbar = getElement("main-navbar");
     const footer = getElement("main-footer");
 
-    const isLanding = pageId === "landing-page";
+    const isLandingPage = pageId === "landing-page";
 
     if (navbar) {
-        navbar.style.display = isLanding ? "flex" : "none";
+        navbar.style.display = isLandingPage ? "flex" : "none";
     }
 
     if (footer) {
-        footer.style.display = isLanding ? "block" : "none";
+        footer.style.display = isLandingPage ? "block" : "none";
     }
 
     window.scrollTo({
@@ -169,17 +192,30 @@ function showPage(pageId) {
     });
 }
 
+
 function openLanding() {
     showPage("landing-page");
 }
+
 
 function openLogin() {
     showPage("login-section");
 }
 
+
 function openRegister() {
     showPage("register-section");
 }
+
+
+function openForgotPassword() {
+    if (getElement("forgot-password-section")) {
+        showPage("forgot-password-section");
+    } else {
+        alert("The password recovery page is not present in your HTML.");
+    }
+}
+
 
 function openDashboard() {
     if (!currentUser) {
@@ -188,20 +224,19 @@ function openDashboard() {
     }
 
     showPage("dashboard");
+
     loadDashboard();
 }
 
-function openForgotPassword() {
-    showPage("forgot-password-section");
-}
 
-
-/* =====================================
+/* ==========================================
    4. PROFILE PHOTO UPLOAD
-===================================== */
+========================================== */
 
 async function uploadProfilePhoto(file, userId) {
-    if (!file) return "";
+    if (!file) {
+        return "";
+    }
 
     if (!file.type.startsWith("image/")) {
         throw new Error("Please select an image file.");
@@ -211,7 +246,10 @@ async function uploadProfilePhoto(file, userId) {
         throw new Error("Your image must be smaller than 5 MB.");
     }
 
-    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+    const safeName = file.name.replace(
+        /[^a-zA-Z0-9._-]/g,
+        "_"
+    );
 
     const imageRef = ref(
         storage,
@@ -224,9 +262,9 @@ async function uploadProfilePhoto(file, userId) {
 }
 
 
-/* =====================================
-   5. REGISTRATION
-===================================== */
+/* ==========================================
+   5. REGISTER ACCOUNT
+========================================== */
 
 const registerForm = getElement("register-form");
 
@@ -234,25 +272,51 @@ if (registerForm) {
     registerForm.addEventListener("submit", async function (event) {
         event.preventDefault();
 
-        const fullName = getElement("full-name").value.trim();
+        const fullName = getElement("full-name")?.value.trim() || "";
 
         const username = normaliseUsername(
-            getElement("username").value
+            getElement("username")?.value
         );
 
-        const email = getElement("register-email").value.trim();
+        const email = getElement("register-email")?.value.trim() || "";
 
-        const password = getElement("register-password").value;
+        const password = getElement("register-password")?.value || "";
 
         const confirmPassword =
-            getElement("confirm-password").value;
+            getElement("confirm-password")?.value || "";
 
-        const imageFile = getElement("profile-image").files[0];
+        const imageFile =
+            getElement("profile-image")?.files?.[0] || null;
+
+        const submitButton = registerForm.querySelector(
+            'button[type="submit"]'
+        );
+
+        if (!fullName) {
+            showMessage("register-message", "Enter your full name.");
+            return;
+        }
 
         if (username.length < 3) {
             showMessage(
                 "register-message",
-                "Username must contain at least 3 characters."
+                "Your username must contain at least 3 characters."
+            );
+            return;
+        }
+
+        if (!email) {
+            showMessage(
+                "register-message",
+                "Enter your email address. Email/password registration is required by this version."
+            );
+            return;
+        }
+
+        if (password.length < 6) {
+            showMessage(
+                "register-message",
+                "Your password must contain at least 6 characters."
             );
             return;
         }
@@ -265,7 +329,18 @@ if (registerForm) {
             return;
         }
 
-        showMessage("register-message", "Creating your account...", true);
+        setButtonLoading(
+            submitButton,
+            true,
+            "Creating account...",
+            "Create Account"
+        );
+
+        showMessage(
+            "register-message",
+            "Checking your username...",
+            true
+        );
 
         try {
             const usernameRef = doc(db, "usernames", username);
@@ -280,33 +355,21 @@ if (registerForm) {
                 return;
             }
 
-            const userCredential =
-                await createUserWithEmailAndPassword(
-                    auth,
-                    email,
-                    password
-                );
+            const credential = await createUserWithEmailAndPassword(
+                auth,
+                email,
+                password
+            );
 
-            const user = userCredential.user;
+            const user = credential.user;
 
             let photoURL = "";
 
             if (imageFile) {
-                try {
-                    photoURL = await uploadProfilePhoto(
-                        imageFile,
-                        user.uid
-                    );
-                } catch (uploadError) {
-                    console.error("Photo upload failed:", uploadError);
-
-                    showMessage(
-                        "register-message",
-                        "Account creation stopped while uploading your photo. Check Storage settings."
-                    );
-
-                    return;
-                }
+                photoURL = await uploadProfilePhoto(
+                    imageFile,
+                    user.uid
+                );
             }
 
             await updateProfile(user, {
@@ -324,7 +387,10 @@ if (registerForm) {
                 createdAt: serverTimestamp()
             };
 
-            await setDoc(doc(db, "users", user.uid), profile);
+            await setDoc(
+                doc(db, "users", user.uid),
+                profile
+            );
 
             await setDoc(
                 doc(db, "publicProfiles", user.uid),
@@ -358,14 +424,22 @@ if (registerForm) {
                 "register-message",
                 getErrorMessage(error)
             );
+
+        } finally {
+            setButtonLoading(
+                submitButton,
+                false,
+                "Creating account...",
+                "Create Account"
+            );
         }
     });
 }
 
 
-/* =====================================
+/* ==========================================
    6. LOGIN
-===================================== */
+========================================== */
 
 const loginForm = getElement("login-form");
 
@@ -373,31 +447,39 @@ if (loginForm) {
     loginForm.addEventListener("submit", async function (event) {
         event.preventDefault();
 
-        const email = getElement("login-email").value.trim();
+        const email =
+            getElement("login-email")?.value.trim() || "";
 
-        const password = getElement("login-password").value;
+        const password =
+            getElement("login-password")?.value || "";
 
-        const loginButton = loginForm.querySelector(
+        const submitButton = loginForm.querySelector(
             'button[type="submit"]'
         );
 
-        if (loginButton) {
-            loginButton.disabled = true;
-            loginButton.textContent = "Logging in...";
-        }
+        setButtonLoading(
+            submitButton,
+            true,
+            "Logging in...",
+            "Login"
+        );
 
-        showMessage("login-message", "Checking your account...", true);
+        showMessage(
+            "login-message",
+            "Checking your account...",
+            true
+        );
 
         try {
-            const result = await signInWithEmailAndPassword(
+            const credential = await signInWithEmailAndPassword(
                 auth,
                 email,
                 password
             );
 
-            currentUser = result.user;
+            currentUser = credential.user;
 
-            await loadUserProfile(result.user);
+            await loadUserProfile(credential.user);
 
             showMessage(
                 "login-message",
@@ -414,18 +496,20 @@ if (loginForm) {
             );
 
         } finally {
-            if (loginButton) {
-                loginButton.disabled = false;
-                loginButton.textContent = "Login";
-            }
+            setButtonLoading(
+                submitButton,
+                false,
+                "Logging in...",
+                "Login"
+            );
         }
     });
 }
 
 
-/* =====================================
+/* ==========================================
    7. LOAD USER PROFILE
-===================================== */
+========================================== */
 
 async function loadUserProfile(user) {
     const profileRef = doc(db, "users", user.uid);
@@ -434,6 +518,7 @@ async function loadUserProfile(user) {
 
     if (profileSnapshot.exists()) {
         currentProfile = profileSnapshot.data();
+
         return currentProfile;
     }
 
@@ -465,9 +550,9 @@ async function loadUserProfile(user) {
 }
 
 
-/* =====================================
+/* ==========================================
    8. DASHBOARD
-===================================== */
+========================================== */
 
 async function loadDashboard() {
     if (!currentUser) return;
@@ -479,32 +564,43 @@ async function loadDashboard() {
 
         if (!currentProfile) return;
 
-        getElement("welcome-name").textContent =
-            currentProfile.fullName || "User";
+        const welcomeName = getElement("welcome-name");
+        const username = getElement("dashboard-username");
+        const email = getElement("dashboard-email");
+        const photo = getElement("dashboard-photo");
 
-        getElement("dashboard-username").textContent =
-            currentProfile.username
+        if (welcomeName) {
+            welcomeName.textContent =
+                currentProfile.fullName || "User";
+        }
+
+        if (username) {
+            username.textContent = currentProfile.username
                 ? "@" + currentProfile.username
                 : "Choose a username in your profile";
+        }
 
-        getElement("dashboard-email").textContent =
-            currentProfile.email || currentUser.email || "";
+        if (email) {
+            email.textContent =
+                currentProfile.email || currentUser.email || "";
+        }
 
-        getElement("dashboard-photo").src =
-            getPhoto(currentProfile);
+        if (photo) {
+            photo.src = getPhoto(currentProfile);
+        }
 
         loadNotifications();
         loadConversationList();
 
     } catch (error) {
-        console.error("Dashboard loading error:", error);
+        console.error("Dashboard error:", error);
     }
 }
 
 
-/* =====================================
+/* ==========================================
    9. LOGOUT
-===================================== */
+========================================== */
 
 async function logoutUser() {
     try {
@@ -518,6 +614,8 @@ async function logoutUser() {
         activeConversationId = null;
         activeChatUser = null;
 
+        selectedFriendProfile = null;
+
         openLanding();
 
     } catch (error) {
@@ -526,9 +624,9 @@ async function logoutUser() {
 }
 
 
-/* =====================================
-   10. FRIEND SEARCH
-===================================== */
+/* ==========================================
+   10. FIND FRIENDS
+========================================== */
 
 const friendsSearchForm = getElement("friends-search-form");
 
@@ -541,31 +639,39 @@ if (friendsSearchForm) {
             return;
         }
 
-        const searchInput = getElement("friends-search-input");
-
-        const searchTerm = normaliseUsername(searchInput.value);
+        const searchTerm = normaliseUsername(
+            getElement("friends-search-input")?.value
+        );
 
         const resultsContainer = getElement("friends-list");
 
-        resultsContainer.innerHTML = "";
+        if (!searchTerm) {
+            showMessage(
+                "friends-search-message",
+                "Enter a username to search."
+            );
+            return;
+        }
+
+        if (resultsContainer) {
+            resultsContainer.innerHTML = "";
+        }
 
         showMessage(
             "friends-search-message",
-            "Searching for users...",
+            "Searching...",
             true
         );
 
         try {
+            let profiles = [];
+
             const usernameSnapshot = await getDoc(
                 doc(db, "usernames", searchTerm)
             );
 
-            let foundProfiles = [];
-
             if (usernameSnapshot.exists()) {
-                const usernameData = usernameSnapshot.data();
-
-                const userId = usernameData.uid;
+                const userId = usernameSnapshot.data().uid;
 
                 if (userId && userId !== currentUser.uid) {
                     const profileSnapshot = await getDoc(
@@ -573,31 +679,33 @@ if (friendsSearchForm) {
                     );
 
                     if (profileSnapshot.exists()) {
-                        foundProfiles.push(profileSnapshot.data());
+                        profiles.push(profileSnapshot.data());
                     }
                 }
             }
 
-            if (foundProfiles.length === 0) {
+            if (profiles.length === 0) {
                 const profilesQuery = query(
                     collection(db, "publicProfiles"),
                     where("username", "==", searchTerm)
                 );
 
-                const profileResults = await getDocs(profilesQuery);
+                const result = await getDocs(profilesQuery);
 
-                profileResults.forEach(profileDoc => {
+                result.forEach(profileDoc => {
                     const profile = profileDoc.data();
 
                     if (profile.uid !== currentUser.uid) {
-                        foundProfiles.push(profile);
+                        profiles.push(profile);
                     }
                 });
             }
 
+            if (!resultsContainer) return;
+
             resultsContainer.innerHTML = "";
 
-            if (foundProfiles.length === 0) {
+            if (profiles.length === 0) {
                 resultsContainer.innerHTML = `
                     <div class="friends-empty">
                         <h3>No user found</h3>
@@ -613,13 +721,11 @@ if (friendsSearchForm) {
                 return;
             }
 
-            foundProfiles.forEach(profile => {
-                displaySearchResult(profile);
-            });
+            profiles.forEach(displaySearchResult);
 
             showMessage(
                 "friends-search-message",
-                `${foundProfiles.length} user found.`,
+                `${profiles.length} user found.`,
                 true
             );
 
@@ -634,7 +740,9 @@ if (friendsSearchForm) {
 
 
 function displaySearchResult(profile) {
-    const resultsContainer = getElement("friends-list");
+    const container = getElement("friends-list");
+
+    if (!container) return;
 
     const card = document.createElement("div");
 
@@ -657,59 +765,68 @@ function displaySearchResult(profile) {
         ? "@" + profile.username
         : "";
 
-    const viewButton = document.createElement("button");
+    const button = document.createElement("button");
 
-    viewButton.type = "button";
-    viewButton.textContent = "View Profile";
+    button.type = "button";
+    button.textContent = "View Profile";
 
-    viewButton.addEventListener("click", function () {
+    button.addEventListener("click", function () {
         openFriendProfile(profile);
     });
 
-    details.appendChild(name);
-    details.appendChild(username);
-    details.appendChild(viewButton);
+    details.append(name, username, button);
 
-    card.appendChild(photo);
-    card.appendChild(details);
+    card.append(photo, details);
 
-    resultsContainer.appendChild(card);
+    container.appendChild(card);
 }
 
 
-/* =====================================
-   11. FRIEND PROFILE POPUP
-===================================== */
+/* ==========================================
+   11. VIEW FRIEND PROFILE
+========================================== */
 
 function openFriendProfile(profile) {
     if (!profile) return;
 
     selectedFriendProfile = profile;
 
-    getElement("friend-profile-photo").src =
-        getPhoto(profile);
-
-    getElement("friend-profile-name").textContent =
-        profile.fullName || "NovaChat User";
-
-    getElement("friend-profile-username").textContent =
-        profile.username ? "@" + profile.username : "";
-
-    getElement("friend-profile-bio").textContent =
-        profile.bio || "NovaChat community member.";
-
+    const photo = getElement("friend-profile-photo");
+    const name = getElement("friend-profile-name");
+    const username = getElement("friend-profile-username");
+    const bio = getElement("friend-profile-bio");
     const popup = getElement("friend-profile");
+    const addButton = getElement("send-friend-request-btn");
 
-    popup.style.display = "block";
-    popup.classList.add("active");
+    if (photo) {
+        photo.src = getPhoto(profile);
+    }
 
-    const requestButton = getElement("send-friend-request-btn");
+    if (name) {
+        name.textContent = profile.fullName || "NovaChat User";
+    }
 
-    if (requestButton) {
-        requestButton.textContent = "Add Friend";
-        requestButton.disabled = false;
+    if (username) {
+        username.textContent = profile.username
+            ? "@" + profile.username
+            : "";
+    }
+
+    if (bio) {
+        bio.textContent = profile.bio || "NovaChat community member.";
+    }
+
+    if (popup) {
+        popup.style.display = "block";
+        popup.classList.add("active");
+    }
+
+    if (addButton) {
+        addButton.disabled = false;
+        addButton.textContent = "Add Friend";
     }
 }
+
 
 window.openFriendProfile = openFriendProfile;
 
@@ -720,24 +837,34 @@ if (closeFriendProfileButton) {
     closeFriendProfileButton.addEventListener("click", function () {
         const popup = getElement("friend-profile");
 
-        popup.style.display = "none";
-        popup.classList.remove("active");
+        if (popup) {
+            popup.style.display = "none";
+            popup.classList.remove("active");
+        }
 
         selectedFriendProfile = null;
     });
 }
 
 
-/* =====================================
+/* ==========================================
    12. SEND FRIEND REQUEST
-===================================== */
+========================================== */
 
 const sendFriendRequestButton =
     getElement("send-friend-request-btn");
 
 if (sendFriendRequestButton) {
     sendFriendRequestButton.addEventListener("click", async function () {
-        if (!currentUser || !selectedFriendProfile) return;
+        if (!currentUser) {
+            openLogin();
+            return;
+        }
+
+        if (!selectedFriendProfile) {
+            alert("Select a user first.");
+            return;
+        }
 
         const friend = selectedFriendProfile;
 
@@ -746,8 +873,12 @@ if (sendFriendRequestButton) {
             return;
         }
 
-        sendFriendRequestButton.disabled = true;
-        sendFriendRequestButton.textContent = "Sending...";
+        setButtonLoading(
+            sendFriendRequestButton,
+            true,
+            "Sending...",
+            "Add Friend"
+        );
 
         try {
             const friendshipId = [
@@ -755,13 +886,9 @@ if (sendFriendRequestButton) {
                 friend.uid
             ].sort().join("_");
 
-            const friendshipRef = doc(
-                db,
-                "friendships",
-                friendshipId
+            const friendshipSnapshot = await getDoc(
+                doc(db, "friendships", friendshipId)
             );
-
-            const friendshipSnapshot = await getDoc(friendshipRef);
 
             if (friendshipSnapshot.exists()) {
                 alert("You are already friends.");
@@ -778,31 +905,37 @@ if (sendFriendRequestButton) {
             const requestsSnapshot = await getDocs(requestsQuery);
 
             if (!requestsSnapshot.empty) {
-                alert("You have already sent a friend request.");
+                alert("You have already sent this friend request.");
                 return;
             }
 
-            await addDoc(collection(db, "friendRequests"), {
-                fromUid: currentUser.uid,
-                toUid: friend.uid,
-                fromName: currentProfile.fullName || "",
-                toName: friend.fullName || "",
-                status: "pending",
-                createdAt: serverTimestamp()
-            });
+            const requestRef = await addDoc(
+                collection(db, "friendRequests"),
+                {
+                    fromUid: currentUser.uid,
+                    toUid: friend.uid,
+                    status: "pending",
+                    createdAt: serverTimestamp()
+                }
+            );
 
-            await addDoc(collection(db, "notifications"), {
-                userId: friend.uid,
-                type: "friend_request",
-                message:
-                    `${currentProfile.fullName || "Someone"} sent you a friend request.`,
-                read: false,
-                createdAt: serverTimestamp()
-            });
-
-            alert("Friend request sent successfully!");
+            await addDoc(
+                collection(db, "notifications"),
+                {
+                    senderId: currentUser.uid,
+                    userId: friend.uid,
+                    type: "friend_request",
+                    message:
+                        `${currentProfile?.fullName || "Someone"} sent you a friend request.`,
+                    read: false,
+                    createdAt: serverTimestamp(),
+                    requestId: requestRef.id
+                }
+            );
 
             sendFriendRequestButton.textContent = "Request Sent";
+
+            alert("Friend request sent successfully.");
 
         } catch (error) {
             alert(getErrorMessage(error));
@@ -811,7 +944,9 @@ if (sendFriendRequestButton) {
             sendFriendRequestButton.textContent = "Add Friend";
 
         } finally {
-            if (sendFriendRequestButton.textContent !== "Request Sent") {
+            if (
+                sendFriendRequestButton.textContent !== "Request Sent"
+            ) {
                 sendFriendRequestButton.disabled = false;
             }
         }
@@ -819,9 +954,9 @@ if (sendFriendRequestButton) {
 }
 
 
-/* =====================================
-   13. FRIEND REQUESTS
-===================================== */
+/* ==========================================
+   13. LOAD FRIEND REQUESTS
+========================================== */
 
 async function loadFriendRequests() {
     if (!currentUser) return;
@@ -846,6 +981,7 @@ async function loadFriendRequests() {
         if (snapshot.empty) {
             container.innerHTML =
                 '<p class="empty-message">No friend requests yet.</p>';
+
             return;
         }
 
@@ -860,7 +996,7 @@ async function loadFriendRequests() {
                 ? profileSnapshot.data()
                 : {
                     uid: request.fromUid,
-                    fullName: request.fromName || "NovaChat User",
+                    fullName: "NovaChat User",
                     username: ""
                 };
 
@@ -868,9 +1004,9 @@ async function loadFriendRequests() {
 
             card.className = "friend-request-card";
 
-            const title = document.createElement("h3");
+            const name = document.createElement("h3");
 
-            title.textContent = profile.fullName;
+            name.textContent = profile.fullName || "NovaChat User";
 
             const username = document.createElement("p");
 
@@ -883,7 +1019,7 @@ async function loadFriendRequests() {
             acceptButton.type = "button";
             acceptButton.textContent = "Accept";
 
-            acceptButton.addEventListener("click", async () => {
+            acceptButton.addEventListener("click", async function () {
                 await respondToFriendRequest(
                     requestDoc.id,
                     request,
@@ -896,7 +1032,7 @@ async function loadFriendRequests() {
             rejectButton.type = "button";
             rejectButton.textContent = "Reject";
 
-            rejectButton.addEventListener("click", async () => {
+            rejectButton.addEventListener("click", async function () {
                 await respondToFriendRequest(
                     requestDoc.id,
                     request,
@@ -904,7 +1040,12 @@ async function loadFriendRequests() {
                 );
             });
 
-            card.append(title, username, acceptButton, rejectButton);
+            card.append(
+                name,
+                username,
+                acceptButton,
+                rejectButton
+            );
 
             container.appendChild(card);
         }
@@ -915,13 +1056,23 @@ async function loadFriendRequests() {
 }
 
 
-async function respondToFriendRequest(requestId, request, response) {
+/* ==========================================
+   14. ACCEPT OR REJECT REQUEST
+========================================== */
+
+async function respondToFriendRequest(
+    requestId,
+    request,
+    response
+) {
     try {
+        // Update only the status field to avoid changing
+        // additional fields that your Firestore rules may reject.
+
         await updateDoc(
             doc(db, "friendRequests", requestId),
             {
-                status: response,
-                respondedAt: serverTimestamp()
+                status: response
             }
         );
 
@@ -941,6 +1092,20 @@ async function respondToFriendRequest(requestId, request, response) {
                     createdAt: serverTimestamp()
                 }
             );
+
+            // Notify the person who sent the request.
+            await addDoc(
+                collection(db, "notifications"),
+                {
+                    senderId: currentUser.uid,
+                    userId: request.fromUid,
+                    type: "friend_accepted",
+                    message:
+                        `${currentProfile?.fullName || "Someone"} accepted your friend request.`,
+                    read: false,
+                    createdAt: serverTimestamp()
+                }
+            );
         }
 
         await loadFriendRequests();
@@ -952,9 +1117,9 @@ async function respondToFriendRequest(requestId, request, response) {
 }
 
 
-/* =====================================
-   14. LOAD MY FRIENDS
-===================================== */
+/* ==========================================
+   15. LOAD MY FRIENDS
+========================================== */
 
 async function loadMyFriends() {
     if (!currentUser) return;
@@ -978,13 +1143,14 @@ async function loadMyFriends() {
         if (snapshot.empty) {
             container.innerHTML =
                 '<p class="empty-message">You have no friends yet.</p>';
+
             return;
         }
 
         for (const friendshipDoc of snapshot.docs) {
             const friendship = friendshipDoc.data();
 
-            const friendUid = friendship.users.find(
+            const friendUid = friendship.users?.find(
                 uid => uid !== currentUser.uid
             );
 
@@ -1002,6 +1168,11 @@ async function loadMyFriends() {
 
             card.className = "friend-card";
 
+            const photo = document.createElement("img");
+
+            photo.src = getPhoto(profile);
+            photo.alt = "Friend profile picture";
+
             const name = document.createElement("h3");
 
             name.textContent = profile.fullName || "NovaChat User";
@@ -1017,11 +1188,16 @@ async function loadMyFriends() {
             messageButton.type = "button";
             messageButton.textContent = "Message";
 
-            messageButton.addEventListener("click", () => {
+            messageButton.addEventListener("click", function () {
                 openConversation(profile);
             });
 
-            card.append(name, username, messageButton);
+            card.append(
+                photo,
+                name,
+                username,
+                messageButton
+            );
 
             container.appendChild(card);
         }
@@ -1032,9 +1208,9 @@ async function loadMyFriends() {
 }
 
 
-/* =====================================
-   15. CONVERSATION LIST
-===================================== */
+/* ==========================================
+   16. CONVERSATION LIST
+========================================== */
 
 function loadConversationList() {
     if (!currentUser) return;
@@ -1045,6 +1221,7 @@ function loadConversationList() {
 
     if (unsubscribeConversations) {
         unsubscribeConversations();
+        unsubscribeConversations = null;
     }
 
     const conversationsQuery = query(
@@ -1054,19 +1231,24 @@ function loadConversationList() {
 
     unsubscribeConversations = onSnapshot(
         conversationsQuery,
+
         async snapshot => {
             container.innerHTML = "";
 
             if (snapshot.empty) {
-                container.innerHTML =
-                    '<p class="empty-message">No conversations yet. Find a friend to start chatting.</p>';
+                container.innerHTML = `
+                    <p class="empty-message">
+                        No conversations yet. Find a friend to start chatting.
+                    </p>
+                `;
+
                 return;
             }
 
             for (const conversationDoc of snapshot.docs) {
                 const conversation = conversationDoc.data();
 
-                const otherUid = conversation.participants.find(
+                const otherUid = conversation.participants?.find(
                     uid => uid !== currentUser.uid
                 );
 
@@ -1088,29 +1270,46 @@ function loadConversationList() {
                 button.textContent =
                     profile.fullName || "NovaChat User";
 
-                button.addEventListener("click", () => {
-                    openConversation(profile, conversationDoc.id);
+                button.addEventListener("click", function () {
+                    openConversation(
+                        profile,
+                        conversationDoc.id
+                    );
                 });
 
                 container.appendChild(button);
             }
         },
+
         error => {
+            console.error("Conversation list error:", error);
+
             container.textContent = getErrorMessage(error);
         }
     );
 }
 
 
-/* =====================================
-   16. OPEN CONVERSATION
-===================================== */
+/* ==========================================
+   17. OPEN CONVERSATION
+========================================== */
 
-async function openConversation(profile, existingConversationId = null) {
-    if (!currentUser || !profile?.uid) return;
+async function openConversation(
+    profile,
+    existingConversationId = null
+) {
+    if (!currentUser) {
+        openLogin();
+        return;
+    }
+
+    if (!profile?.uid) {
+        alert("This user's profile is unavailable.");
+        return;
+    }
 
     if (profile.uid === currentUser.uid) {
-        alert("You cannot start a conversation with yourself.");
+        alert("You cannot message yourself.");
         return;
     }
 
@@ -1127,29 +1326,44 @@ async function openConversation(profile, existingConversationId = null) {
             conversationId
         );
 
-        const conversationSnapshot = await getDoc(conversationRef);
+        const conversationSnapshot = await getDoc(
+            conversationRef
+        );
 
         if (!conversationSnapshot.exists()) {
-            await setDoc(conversationRef, {
-                participants: [
-                    currentUser.uid,
-                    profile.uid
-                ],
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-            });
+            await setDoc(
+                conversationRef,
+                {
+                    participants: [
+                        currentUser.uid,
+                        profile.uid
+                    ],
+                    createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp()
+                }
+            );
         }
 
         activeConversationId = conversationId;
         activeChatUser = profile;
 
-        getElement("chat-user-photo").src = getPhoto(profile);
+        const photo = getElement("chat-user-photo");
+        const name = getElement("chat-user-name");
+        const username = getElement("chat-user-username");
 
-        getElement("chat-user-name").textContent =
-            profile.fullName || "NovaChat User";
+        if (photo) {
+            photo.src = getPhoto(profile);
+        }
 
-        getElement("chat-user-username").textContent =
-            profile.username ? "@" + profile.username : "";
+        if (name) {
+            name.textContent = profile.fullName || "NovaChat User";
+        }
+
+        if (username) {
+            username.textContent = profile.username
+                ? "@" + profile.username
+                : "";
+        }
 
         showPage("chat-page");
 
@@ -1161,18 +1375,24 @@ async function openConversation(profile, existingConversationId = null) {
 }
 
 
-/* =====================================
-   17. LISTEN FOR MESSAGES
-===================================== */
+window.openConversation = openConversation;
+
+
+/* ==========================================
+   18. REAL-TIME MESSAGES
+========================================== */
 
 function listenForMessages(conversationId) {
     if (unsubscribeMessages) {
         unsubscribeMessages();
+        unsubscribeMessages = null;
     }
 
-    const messagesContainer = getElement("messages-container");
+    const container = getElement("messages-container");
 
-    messagesContainer.innerHTML = "<p>Loading messages...</p>";
+    if (!container) return;
+
+    container.innerHTML = "<p>Loading messages...</p>";
 
     const messagesQuery = query(
         collection(
@@ -1186,12 +1406,17 @@ function listenForMessages(conversationId) {
 
     unsubscribeMessages = onSnapshot(
         messagesQuery,
+
         snapshot => {
-            messagesContainer.innerHTML = "";
+            container.innerHTML = "";
 
             if (snapshot.empty) {
-                messagesContainer.innerHTML =
-                    '<p class="empty-message">No messages yet. Say hello!</p>';
+                container.innerHTML = `
+                    <p class="empty-message">
+                        No messages yet. Say hello!
+                    </p>
+                `;
+
                 return;
             }
 
@@ -1215,22 +1440,24 @@ function listenForMessages(conversationId) {
 
                 bubble.append(text, time);
 
-                messagesContainer.appendChild(bubble);
+                container.appendChild(bubble);
             });
 
-            messagesContainer.scrollTop =
-                messagesContainer.scrollHeight;
+            container.scrollTop = container.scrollHeight;
         },
+
         error => {
-            messagesContainer.textContent = getErrorMessage(error);
+            console.error("Messages error:", error);
+
+            container.textContent = getErrorMessage(error);
         }
     );
 }
 
 
-/* =====================================
-   18. SEND MESSAGE
-===================================== */
+/* ==========================================
+   19. SEND MESSAGE
+========================================== */
 
 const messageForm = getElement("message-form");
 
@@ -1238,23 +1465,26 @@ if (messageForm) {
     messageForm.addEventListener("submit", async function (event) {
         event.preventDefault();
 
-        if (!currentUser || !activeConversationId) {
+        if (!currentUser || !activeConversationId || !activeChatUser) {
             showMessage(
                 "chat-message-status",
-                "Select a conversation first."
+                "Open a conversation before sending a message."
             );
+
             return;
         }
 
         const input = getElement("message-input");
 
-        const messageText = input.value.trim();
+        const messageText = input?.value.trim() || "";
 
         if (!messageText) return;
 
         const sendButton = getElement("send-message-btn");
 
-        sendButton.disabled = true;
+        if (sendButton) {
+            sendButton.disabled = true;
+        }
 
         try {
             await addDoc(
@@ -1294,21 +1524,26 @@ if (messageForm) {
             );
 
         } finally {
-            sendButton.disabled = false;
+            if (sendButton) {
+                sendButton.disabled = false;
+            }
+
+            input?.focus();
         }
     });
 }
 
 
-/* =====================================
-   19. NOTIFICATIONS
-===================================== */
+/* ==========================================
+   20. NOTIFICATIONS
+========================================== */
 
 function loadNotifications() {
     if (!currentUser) return;
 
     if (unsubscribeNotifications) {
         unsubscribeNotifications();
+        unsubscribeNotifications = null;
     }
 
     const notificationsQuery = query(
@@ -1318,6 +1553,7 @@ function loadNotifications() {
 
     unsubscribeNotifications = onSnapshot(
         notificationsQuery,
+
         snapshot => {
             const container = getElement("notifications-list");
             const badge = getElement("notification-count");
@@ -1332,6 +1568,9 @@ function loadNotifications() {
 
             if (badge) {
                 badge.textContent = unreadCount;
+                badge.style.display = unreadCount > 0
+                    ? "inline-block"
+                    : "none";
             }
 
             if (!container) return;
@@ -1339,17 +1578,23 @@ function loadNotifications() {
             container.innerHTML = "";
 
             if (snapshot.empty) {
-                container.innerHTML =
-                    '<p class="empty-message">You do not have any notifications yet.</p>';
+                container.innerHTML = `
+                    <p class="empty-message">
+                        You do not have any notifications yet.
+                    </p>
+                `;
+
                 return;
             }
 
-            const notifications = [...snapshot.docs].sort((a, b) => {
-                const timeA = a.data().createdAt?.seconds || 0;
-                const timeB = b.data().createdAt?.seconds || 0;
+            const notifications = [...snapshot.docs].sort(
+                (a, b) => {
+                    const timeA = a.data().createdAt?.seconds || 0;
+                    const timeB = b.data().createdAt?.seconds || 0;
 
-                return timeB - timeA;
-            });
+                    return timeB - timeA;
+                }
+            );
 
             notifications.forEach(notificationDoc => {
                 const notification = notificationDoc.data();
@@ -1358,15 +1603,25 @@ function loadNotifications() {
 
                 card.className = "notification-card";
 
-                card.textContent = notification.message || "Notification";
+                const message = document.createElement("p");
+
+                message.textContent =
+                    notification.message || "New notification";
+
+                const time = document.createElement("small");
+
+                time.textContent = formatDate(notification.createdAt);
 
                 if (!notification.read) {
                     card.style.fontWeight = "bold";
                 }
 
+                card.append(message, time);
+
                 container.appendChild(card);
             });
         },
+
         error => {
             console.error("Notification error:", error);
         }
@@ -1374,15 +1629,22 @@ function loadNotifications() {
 }
 
 
-/* =====================================
-   20. MARK NOTIFICATIONS AS READ
-===================================== */
+/* ==========================================
+   21. MARK NOTIFICATIONS AS READ
+========================================== */
 
 const markAllReadButton = getElement("mark-all-read-btn");
 
 if (markAllReadButton) {
     markAllReadButton.addEventListener("click", async function () {
         if (!currentUser) return;
+
+        setButtonLoading(
+            markAllReadButton,
+            true,
+            "Updating...",
+            "Mark all as read"
+        );
 
         try {
             const notificationsQuery = query(
@@ -1394,9 +1656,12 @@ if (markAllReadButton) {
 
             for (const notificationDoc of snapshot.docs) {
                 if (!notificationDoc.data().read) {
-                    await updateDoc(notificationDoc.ref, {
-                        read: true
-                    });
+                    await updateDoc(
+                        notificationDoc.ref,
+                        {
+                            read: true
+                        }
+                    );
                 }
             }
 
@@ -1404,29 +1669,60 @@ if (markAllReadButton) {
 
         } catch (error) {
             alert(getErrorMessage(error));
+
+        } finally {
+            setButtonLoading(
+                markAllReadButton,
+                false,
+                "Updating...",
+                "Mark all as read"
+            );
         }
     });
 }
 
 
-/* =====================================
-   21. EDIT PROFILE
-===================================== */
+/* ==========================================
+   22. EDIT PROFILE
+========================================== */
 
 function fillProfileForm() {
     if (!currentProfile) return;
 
-    getElement("edit-full-name").value =
-        currentProfile.fullName || "";
+    const fullName = getElement("edit-full-name");
+    const username = getElement("edit-username");
+    const bio = getElement("edit-bio");
+    const preview = getElement("edit-profile-preview");
 
-    getElement("edit-username").value =
-        currentProfile.username || "";
+    if (fullName) {
+        fullName.value = currentProfile.fullName || "";
+    }
 
-    getElement("edit-bio").value =
-        currentProfile.bio || "";
+    if (username) {
+        username.value = currentProfile.username || "";
+    }
 
-    getElement("edit-profile-preview").src =
-        getPhoto(currentProfile);
+    if (bio) {
+        bio.value = currentProfile.bio || "";
+    }
+
+    if (preview) {
+        preview.src = getPhoto(currentProfile);
+    }
+}
+
+
+// This is the only openProfile function in this file.
+
+function openProfile() {
+    if (!currentUser) {
+        openLogin();
+        return;
+    }
+
+    fillProfileForm();
+
+    showPage("edit-profile-page");
 }
 
 
@@ -1436,27 +1732,46 @@ if (editProfileForm) {
     editProfileForm.addEventListener("submit", async function (event) {
         event.preventDefault();
 
-        if (!currentUser || !currentProfile) return;
+        if (!currentUser || !currentProfile) {
+            alert("Please log in again.");
+            return;
+        }
 
         const fullName =
-            getElement("edit-full-name").value.trim();
+            getElement("edit-full-name")?.value.trim() || "";
 
-        const username =
-            normaliseUsername(getElement("edit-username").value);
+        const username = normaliseUsername(
+            getElement("edit-username")?.value
+        );
 
         const bio =
-            getElement("edit-bio").value.trim();
+            getElement("edit-bio")?.value.trim() || "";
 
         const imageFile =
-            getElement("edit-profile-image").files[0];
+            getElement("edit-profile-image")?.files?.[0] || null;
+
+        const saveButton = getElement("save-profile-btn");
+
+        if (!fullName) {
+            showMessage("profile-message", "Enter your full name.");
+            return;
+        }
 
         if (username.length < 3) {
             showMessage(
                 "profile-message",
-                "Username must contain at least 3 characters."
+                "Your username must contain at least 3 characters."
             );
+
             return;
         }
+
+        setButtonLoading(
+            saveButton,
+            true,
+            "Saving...",
+            "Save Profile"
+        );
 
         showMessage(
             "profile-message",
@@ -1473,11 +1788,16 @@ if (editProfileForm) {
                 );
 
                 if (usernameSnapshot.exists()) {
-                    showMessage(
-                        "profile-message",
-                        "That username is already taken."
-                    );
-                    return;
+                    const owner = usernameSnapshot.data().uid;
+
+                    if (owner !== currentUser.uid) {
+                        showMessage(
+                            "profile-message",
+                            "That username is already taken."
+                        );
+
+                        return;
+                    }
                 }
             }
 
@@ -1491,22 +1811,32 @@ if (editProfileForm) {
             }
 
             const updatedProfile = {
-                fullName,
-                username,
-                bio,
-                photoURL
+                uid: currentUser.uid,
+                fullName: fullName,
+                username: username,
+                email: currentUser.email || "",
+                bio: bio,
+                photoURL: photoURL
             };
 
             await updateDoc(
                 doc(db, "users", currentUser.uid),
-                updatedProfile
+                {
+                    fullName: fullName,
+                    username: username,
+                    bio: bio,
+                    photoURL: photoURL
+                }
             );
 
             await setDoc(
                 doc(db, "publicProfiles", currentUser.uid),
                 {
                     uid: currentUser.uid,
-                    ...updatedProfile
+                    fullName: fullName,
+                    username: username,
+                    bio: bio,
+                    photoURL: photoURL
                 }
             );
 
@@ -1515,10 +1845,12 @@ if (editProfileForm) {
                     doc(db, "usernames", username),
                     {
                         uid: currentUser.uid,
-                        username
+                        username: username
                     }
                 );
 
+                // Delete the old username only if it still belongs
+                // to the signed-in user.
                 if (oldUsername) {
                     const oldUsernameRef = doc(
                         db,
@@ -1526,18 +1858,22 @@ if (editProfileForm) {
                         oldUsername
                     );
 
-                    const oldUsernameSnapshot =
-                        await getDoc(oldUsernameRef);
+                    const oldUsernameSnapshot = await getDoc(
+                        oldUsernameRef
+                    );
 
                     if (
                         oldUsernameSnapshot.exists() &&
                         oldUsernameSnapshot.data().uid === currentUser.uid
                     ) {
-                        await updateDoc(oldUsernameRef, {
-                            uid: currentUser.uid,
-                            username: oldUsername,
-                            available: false
-                        });
+                        await setDoc(
+                            oldUsernameRef,
+                            {
+                                uid: currentUser.uid,
+                                username: oldUsername,
+                                available: false
+                            }
+                        );
                     }
                 }
             }
@@ -1553,7 +1889,8 @@ if (editProfileForm) {
             };
 
             fillProfileForm();
-            loadDashboard();
+
+            await loadDashboard();
 
             showMessage(
                 "profile-message",
@@ -1566,14 +1903,22 @@ if (editProfileForm) {
                 "profile-message",
                 getErrorMessage(error)
             );
+
+        } finally {
+            setButtonLoading(
+                saveButton,
+                false,
+                "Saving...",
+                "Save Profile"
+            );
         }
     });
 }
 
 
-/* =====================================
-   22. IMAGE PREVIEWS
-===================================== */
+/* ==========================================
+   23. PROFILE IMAGE PREVIEWS
+========================================== */
 
 function previewImage(inputId, previewId) {
     const input = getElement(inputId);
@@ -1582,35 +1927,51 @@ function previewImage(inputId, previewId) {
     if (!input || !preview) return;
 
     input.addEventListener("change", function () {
-        const file = input.files[0];
+        const file = input.files?.[0];
 
         if (!file) return;
 
         if (!file.type.startsWith("image/")) {
             alert("Please choose an image file.");
+
             input.value = "";
+
             return;
         }
 
-        preview.src = URL.createObjectURL(file);
+        if (file.size > 5 * 1024 * 1024) {
+            alert("The image must be smaller than 5 MB.");
+
+            input.value = "";
+
+            return;
+        }
+
+        const imageURL = URL.createObjectURL(file);
+
+        preview.src = imageURL;
         preview.style.display = "block";
     });
 }
+
 
 previewImage("profile-image", "profile-preview");
 
 previewImage("edit-profile-image", "edit-profile-preview");
 
 
-/* =====================================
-   23. PASSWORD RESET
-===================================== */
+/* ==========================================
+   24. PASSWORD RESET
+========================================== */
 
 async function resetPassword() {
-    const emailInput = getElement("recovery-email");
+    const emailInput =
+        getElement("recovery-email") ||
+        getElement("login-email") ||
+        getElement("register-email");
 
     if (!emailInput) {
-        alert("The password recovery form is not present in your HTML.");
+        alert("The email input for password recovery was not found.");
         return;
     }
 
@@ -1621,6 +1982,7 @@ async function resetPassword() {
             "recovery-message",
             "Enter your email address first."
         );
+
         return;
     }
 
@@ -1641,12 +2003,61 @@ async function resetPassword() {
     }
 }
 
+
 window.resetPassword = resetPassword;
 
 
-/* =====================================
-   24. STOP REAL-TIME LISTENERS
-===================================== */
+/* ==========================================
+   25. REGISTRATION METHOD
+========================================== */
+
+const registerMethod = getElement("register-method");
+
+function updateRegistrationMethod() {
+    if (!registerMethod) return;
+
+    const emailField = getElement("email-field");
+    const phoneField = getElement("phone-field");
+
+    const emailInput = getElement("register-email");
+    const phoneInput = getElement("register-phone");
+
+    const usingPhone = registerMethod.value === "phone";
+
+    if (emailField) {
+        emailField.style.display = usingPhone ? "none" : "block";
+    }
+
+    if (phoneField) {
+        phoneField.style.display = usingPhone ? "block" : "none";
+    }
+
+    // This version creates accounts using Firebase email/password.
+    // Selecting phone does not activate Firebase phone authentication.
+
+    if (emailInput) {
+        emailInput.required = !usingPhone;
+    }
+
+    if (phoneInput) {
+        phoneInput.required = usingPhone;
+    }
+}
+
+
+if (registerMethod) {
+    registerMethod.addEventListener(
+        "change",
+        updateRegistrationMethod
+    );
+
+    updateRegistrationMethod();
+}
+
+
+/* ==========================================
+   26. STOP REAL-TIME LISTENERS
+========================================== */
 
 function stopRealtimeListeners() {
     if (unsubscribeMessages) {
@@ -1666,161 +2077,169 @@ function stopRealtimeListeners() {
 }
 
 
-/* =====================================
-   25. NAVIGATION BUTTONS
-===================================== */
+/* ==========================================
+   27. CONNECT BUTTONS
+========================================== */
 
-function connectButton(id, action) {
+function connectButton(id, callback) {
     const button = getElement(id);
 
-    if (button) {
-        button.addEventListener("click", action);
+    if (!button) {
+        console.warn("Button not found in HTML:", id);
+        return;
     }
+
+    button.addEventListener("click", function (event) {
+        // Do not interrupt normal form submission.
+        if (button.type !== "submit") {
+            event.preventDefault();
+        }
+
+        callback();
+    });
 }
 
 
-// Homepage navigation
+/* Homepage buttons */
 
 document.querySelectorAll(".login-btn").forEach(button => {
-    button.addEventListener("click", openLogin);
-});
-
-document.querySelectorAll(".signup-btn").forEach(button => {
-    button.addEventListener("click", openRegister);
-});
-
-document.querySelectorAll(".start-btn").forEach(button => {
-    button.addEventListener("click", openRegister);
-});
-
-connectButton("home-logo", openLanding);
-
-document.querySelectorAll(".dashboard-header .logo").forEach(button => {
-    button.addEventListener("click", event => {
+    button.addEventListener("click", function (event) {
         event.preventDefault();
-        openDashboard();
+        openLogin();
     });
 });
 
 
-// Registration and login navigation
+document.querySelectorAll(".signup-btn").forEach(button => {
+    button.addEventListener("click", function (event) {
+        event.preventDefault();
+        openRegister();
+    });
+});
+
+
+document.querySelectorAll(".start-btn").forEach(button => {
+    button.addEventListener("click", function (event) {
+        event.preventDefault();
+        openRegister();
+    });
+});
+
+
+connectButton("home-logo", function () {
+    if (currentUser) {
+        openDashboard();
+    } else {
+        openLanding();
+    }
+});
+
+
+/* Login and registration navigation */
 
 connectButton("register-home-btn", openLanding);
+
 connectButton("login-home-btn", openLanding);
+
 connectButton("open-register-btn", openRegister);
 
-connectButton("forgot-password-btn", openForgotPassword);
-connectButton("open-forgot-password-btn", openForgotPassword);
-connectButton("back-to-login-btn", openLogin);
+/* Dashboard navigation */
 
-
-// Dashboard navigation
-
-connectButton("find-friends-btn", () => {
+connectButton("find-friends-btn", function () {
     showPage("find-friends-page");
 });
 
-connectButton("open-chat-btn", () => {
+
+connectButton("open-chat-btn", function () {
     showPage("chat-page");
     loadConversationList();
 });
 
-connectButton("open-friends-btn", () => {
+
+connectButton("open-friends-btn", function () {
     showPage("friends-page");
+
     loadFriendRequests();
+
     loadMyFriends();
 });
 
-connectButton("profile-btn", () => {
-    fillProfileForm();
-    showPage("edit-profile-page");
-});
 
-connectButton("open-notifications-btn", () => {
+connectButton("profile-btn", openProfile);
+
+
+connectButton("open-notifications-btn", function () {
     showPage("notifications-page");
+    loadNotifications();
 });
 
-connectButton("settings-btn", () => {
+
+connectButton("settings-btn", function () {
     showPage("settings-page");
 });
 
 
-// Back buttons
+/* Back buttons */
 
 connectButton("back-dashboard-btn", openDashboard);
+
 connectButton("friends-back-btn", openDashboard);
+
 connectButton("chat-back-btn", openDashboard);
+
 connectButton("profile-back-btn", openDashboard);
+
 connectButton("notifications-back-btn", openDashboard);
+
 connectButton("settings-back-btn", openDashboard);
 
 
-// Settings shortcuts
+/* Settings shortcuts */
 
-connectButton("settings-profile-btn", () => {
-    fillProfileForm();
-    showPage("edit-profile-page");
-});
+connectButton("settings-profile-btn", openProfile);
 
-connectButton("settings-notifications-btn", () => {
+
+connectButton("settings-notifications-btn", function () {
     showPage("notifications-page");
+    loadNotifications();
 });
 
 
-// Logout buttons
+/* Logout buttons */
 
 connectButton("logout-btn", logoutUser);
+
 connectButton("settings-logout-btn", logoutUser);
 
 
-/* =====================================
-   26. REGISTRATION METHOD
-===================================== */
+/* Friend profile actions */
 
-const registerMethod = getElement("register-method");
+connectButton("message-friend-btn", function () {
+    if (!selectedFriendProfile) {
+        alert("Select a user first.");
+        return;
+    }
 
-function updateRegistrationMethod() {
-    if (!registerMethod) return;
-
-    const emailField = getElement("email-field");
-    const phoneField = getElement("phone-field");
-
-    const emailInput = getElement("register-email");
-    const phoneInput = getElement("register-phone");
-
-    const usingPhone = registerMethod.value === "phone";
-
-    emailField.style.display = usingPhone ? "none" : "block";
-    phoneField.style.display = usingPhone ? "block" : "none";
-
-    emailInput.required = !usingPhone;
-    phoneInput.required = usingPhone;
-}
-
-if (registerMethod) {
-    registerMethod.addEventListener(
-        "change",
-        updateRegistrationMethod
-    );
-
-    updateRegistrationMethod();
-}
+    openConversation(selectedFriendProfile);
+});
 
 
-/* =====================================
-   27. AUTHENTICATION STATE
-===================================== */
+/* ==========================================
+   28. AUTHENTICATION STATE
+========================================== */
 
-onAuthStateChanged(auth, async user => {
+onAuthStateChanged(auth, async function (user) {
     currentUser = user;
 
     if (!user) {
         currentProfile = null;
 
-        stopRealtimeListeners();
-
         activeConversationId = null;
         activeChatUser = null;
+
+        selectedFriendProfile = null;
+
+        stopRealtimeListeners();
 
         openLanding();
 
@@ -1830,25 +2249,24 @@ onAuthStateChanged(auth, async user => {
     try {
         await loadUserProfile(user);
 
-        // Only navigate after Firebase confirms authentication
-        // and the user profile has loaded successfully.
         openDashboard();
 
     } catch (error) {
-        console.error("Authentication setup failed:", error);
-
-        showPage("dashboard");
+        console.error(
+            "Could not load the signed-in user's profile:",
+            error
+        );
 
         alert(
-            "You are logged in, but your profile could not be loaded. " +
+            "You are signed in, but your profile could not be loaded. " +
             getErrorMessage(error)
         );
     }
 });
 
 
-/* =====================================
-   28. START THE APP
-===================================== */
+/* ==========================================
+   29. START NOVACHAT
+========================================== */
 
 console.log("NovaChat JavaScript loaded successfully.");
